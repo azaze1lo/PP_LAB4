@@ -1,22 +1,20 @@
 package bsu.rfe.java.group9.lab3.Piliptsevich.varA1;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.Stroke;
+import javafx.util.Pair;
+
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.font.FontRenderContext;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import javax.swing.JPanel;
+import java.util.*;
+import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class GraphicsDisplay extends JPanel {
+public class GraphicsDisplay extends JPanel implements MouseMotionListener {
     // Список координат точек для построения графика
     private Double[][] graphicsData;
     // Флаговые переменные, задающие правила отображения графика
@@ -36,6 +34,9 @@ public class GraphicsDisplay extends JPanel {
     // Различные шрифты отображения надписей
     private Font axisFont;
 
+    private Hashtable<GeneralPath, Pair<Double, Double>> markers = new Hashtable<>();
+    private JLabel coordinateLbl;
+
     GraphicsDisplay() {
 // Цвет заднего фона области отображения - белый
         setBackground(Color.WHITE);
@@ -51,6 +52,13 @@ public class GraphicsDisplay extends JPanel {
                 BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
 // Шрифт для подписей осей координат
         axisFont = new Font("Serif", Font.BOLD, 36);
+
+        coordinateLbl = new JLabel("", SwingConstants.RIGHT);
+        coordinateLbl.setVisible(false);
+        this.setLayout(new FlowLayout(FlowLayout.LEFT));
+        this.add(coordinateLbl);
+
+        addMouseMotionListener(this);
     }
 // Данный метод вызывается из обработчика элемента меню "Открыть файл с графиком"
 
@@ -121,15 +129,13 @@ public class GraphicsDisplay extends JPanel {
 * 3) Набросим по половине недостающего расстояния на maxY и
 minY
 */
-            double yIncrement = (getSize().getHeight() / scale - (maxY -
-                    minY)) / 2;
+            double yIncrement = (getSize().getHeight() / scale - (maxY - minY)) / 2;
             maxY += yIncrement;
             minY -= yIncrement;
         }
         if (scale == scaleY) {
 // Если за основу был взят масштаб по оси Y, действовать по аналогии
-            double xIncrement = (getSize().getWidth() / scale - (maxX -
-                    minX)) / 2;
+            double xIncrement = (getSize().getWidth() / scale - (maxX - minX)) / 2;
             maxX += xIncrement;
             minX -= xIncrement;
         }
@@ -210,6 +216,7 @@ minY
             marker.moveTo(pointCenter.getX() + 1, pointCenter.getY() - 5.5);
             marker.lineTo(pointCenter.getX() + 1, pointCenter.getY() + 5.5);
 
+            markers.put(marker, new Pair<Double, Double>(point[0], point[1]));
             canvas.draw(marker); // Начертить контур маркера
         }
     }
@@ -312,5 +319,26 @@ minY
 // Задать еѐ координаты как координаты существующей точки + заданные смещения
         dest.setLocation(src.getX() + deltaX, src.getY() + deltaY);
         return dest;
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent mouseEvent) {
+            for(GeneralPath marker : markers.keySet())
+            {
+                Pair<Double, Double> pair = markers.get(marker);
+                coordinateLbl.setText("X = " + pair.getKey() + " Y = " + pair.getValue());
+                if (marker.getBounds2D().contains(mouseEvent.getPoint())){
+                    coordinateLbl.setVisible(true);
+                    break;
+                }
+                else{
+                    coordinateLbl.setVisible(false);
+                }
+            }
     }
 }
